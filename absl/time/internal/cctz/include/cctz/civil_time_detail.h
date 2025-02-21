@@ -58,7 +58,7 @@ using second_t = std::int_fast8_t;  // [0:59]
 struct fields {
   CONSTEXPR_M fields(year_t year, month_t month, day_t day, hour_t hour,
                      minute_t minute, second_t second)
-      : y(year), m(month), d(day), hh(hour), mm(minute), ss(second) {}
+      : y(year), m(std::int_least8_t(month)), d(std::int_least8_t(day)), hh(std::int_least8_t(hour)), mm(std::int_least8_t(minute)), ss(std::int_least8_t(second)) {}
   std::int_least64_t y;
   std::int_least8_t m;
   std::int_least8_t d;

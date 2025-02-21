@@ -30,7 +30,7 @@
 #include <sys/syscall.h>
 #endif
 
-#if defined(__APPLE__) || defined(__FreeBSD__)
+#if defined(__APPLE__) || defined(__FreeBSD__) && !defined(__PROSPERO__)
 #include <sys/sysctl.h>
 #endif
 
@@ -439,6 +439,10 @@ pid_t GetTID() {
   pthread_threadid_np(nullptr, &tid);
   return static_cast<pid_t>(tid);
 }
+
+#elif defined(__PROSPERO__)
+
+pid_t GetTID() { return static_cast<pid_t>(scePthreadGetthreadid()); }
 
 #elif defined(__FreeBSD__)
 

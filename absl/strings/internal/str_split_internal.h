@@ -405,6 +405,7 @@ class Splitter {
         } while (++index != ar.size() && !it.at_end());
         // We static_cast index to a signed type to work around overzealous
         // compiler warnings about signedness.
+        // KEITH
         v.insert(v.end(), ar.begin(),
                  ar.begin() + static_cast<ptrdiff_t>(index));
       }

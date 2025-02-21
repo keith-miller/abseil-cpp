@@ -35,6 +35,10 @@
 #include <windows.h>
 #endif
 
+#if defined(__PROSPERO__)
+#include <kernel.h>
+#endif
+
 namespace absl {
 ABSL_NAMESPACE_BEGIN
 namespace base_internal {
@@ -48,6 +52,8 @@ size_t GetPageSize() {
   return system_info.dwPageSize;
 #elif defined(__wasm__) || defined(__asmjs__) || defined(__hexagon__)
   return getpagesize();
+#elif defined(__PROSPERO__)
+  return SCE_KERNEL_PAGE_SIZE;
 #else
   return static_cast<size_t>(sysconf(_SC_PAGESIZE));
 #endif

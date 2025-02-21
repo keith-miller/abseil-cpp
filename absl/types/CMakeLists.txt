@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+if(NOT(__COMPILER_PS5))
 absl_cc_library(
   NAME
     any
@@ -102,6 +103,7 @@ absl_cc_test(
     absl::exception_safety_testing
     GTest::gmock_main
 )
+endif()
 
 absl_cc_library(
   NAME

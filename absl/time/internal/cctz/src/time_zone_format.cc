@@ -13,7 +13,8 @@
 //   limitations under the License.
 
 #if !defined(HAS_STRPTIME)
-#if !defined(_MSC_VER) && !defined(__MINGW32__) && !defined(__VXWORKS__)
+#if !defined(_MSC_VER) && !defined(__MINGW32__) && !defined(__VXWORKS__) && \
+  !defined(__PROSPERO__)
 #define HAS_STRPTIME 1  // Assume everyone else has strptime().
 #endif
 #endif
@@ -40,7 +41,7 @@
 #include <limits>
 #include <string>
 #include <vector>
-#if !HAS_STRPTIME
+#if !defined(HAS_STRPTIME)
 #include <iomanip>
 #include <sstream>
 #endif
@@ -56,7 +57,7 @@ namespace detail {
 
 namespace {
 
-#if !HAS_STRPTIME
+#if !defined(HAS_STRPTIME)
 // Build a strptime() using C++11's std::get_time().
 char* strptime(const char* s, const char* fmt, std::tm* tm) {
   std::istringstream input(s);

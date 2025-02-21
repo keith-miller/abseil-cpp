@@ -35,7 +35,11 @@
 
 #ifndef _WIN32
 #include <pthread.h>
+#if defined(__PROSPERO__)
+#include <sys/signal.h>
+#else
 #include <signal.h>
+#endif
 #include <sys/mman.h>
 #include <unistd.h>
 #else
@@ -85,8 +89,14 @@ struct AllocList {
     // Pointer to parent arena.
     LowLevelAlloc::Arena *arena;
 
+#if defined(__PROSPERO__)
+    // The physical address corresponding to the virtual address start if direct
+    // memory is mapped(PlayStation5 only)
+    off_t sce_off;
+#else
     // Aligns regions to 0 mod 2*sizeof(void*).
     void *dummy_for_alignment;
+#endif
   } header;
 
   // Next two fields: in unallocated blocks: freelist skiplist data
@@ -331,6 +341,8 @@ size_t GetPageSize() {
   return std::max(system_info.dwPageSize, system_info.dwAllocationGranularity);
 #elif defined(__wasm__) || defined(__asmjs__) || defined(__hexagon__)
   return getpagesize();
+#elif defined(__PROSPERO__)
+  return SCE_KERNEL_PAGE_SIZE;
 #else
   return static_cast<size_t>(sysconf(_SC_PAGESIZE));
 #endif
@@ -413,6 +425,17 @@ bool LowLevelAlloc::DeleteArena(Arena *arena) {
     } else {
       munmap_result = base_internal::DirectMunmap(region, size);
     }
+#elif defined(__PROSPERO__)
+    off_t offset = region->header.sce_off;
+    if (offset != 0) {
+      munmap_result = sceKernelMunmap(region, size);
+      ABSL_RAW_CHECK(munmap_result == 0, "sceKernelMunmap failed");
+
+      munmap_result = sceKernelReleaseDirectMemory(offset, size);
+      ABSL_RAW_CHECK(munmap_result == 0, "sceKernelReleaseDirectMemory failed");
+    } else {
+      munmap_result = 0;
+    }    
 #else
     munmap_result = munmap(region, size);
 #endif  // ABSL_LOW_LEVEL_ALLOC_ASYNC_SIGNAL_SAFE_MISSING
@@ -561,6 +584,22 @@ static void *DoAllocWithArena(size_t request, LowLevelAlloc::Arena *arena) {
         new_pages = mmap(nullptr, new_pages_size, PROT_WRITE | PROT_READ,
                          MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
       }
+#elif defined(__PROSPERO__)
+      off_t off;
+      size_t memalign = 64 * 1024;
+      int ret = sceKernelAllocateDirectMemory(
+          0, (off_t)SCE_KERNEL_MAIN_DMEM_SIZE, new_pages_size, memalign,
+          SCE_KERNEL_MTYPE_C_SHARED, &off);
+      if (ret != 0) {
+        return nullptr;
+      }
+      new_pages = nullptr;
+      ret = sceKernelMapDirectMemory(
+          &new_pages, new_pages_size,
+          SCE_KERNEL_PROT_CPU_RW | SCE_KERNEL_PROT_AMPR_RW, 0, off, memalign);
+      if (ret != 0) {
+        return nullptr;
+      }
 #else
       new_pages = mmap(nullptr, new_pages_size, PROT_WRITE | PROT_READ,
                        MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
@@ -588,6 +627,9 @@ static void *DoAllocWithArena(size_t request, LowLevelAlloc::Arena *arena) {
       // Pretend the block is allocated; call AddToFreelist() to free it.
       s->header.magic = Magic(kMagicAllocated, &s->header);
       s->header.arena = arena;
+#if defined(__PROSPERO__)
+      s->header.sce_off = off;
+#endif
       AddToFreelist(&s->levels, arena);  // insert new region into free list
     }
     AllocList *prev[kMaxLevel];

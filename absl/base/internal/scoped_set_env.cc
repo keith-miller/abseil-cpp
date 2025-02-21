@@ -35,7 +35,7 @@ const int kMaxEnvVarValueSize = 1024;
 void SetEnvVar(const char* name, const char* value) {
 #ifdef _WIN32
   SetEnvironmentVariableA(name, value);
-#else
+#elif !defined(__PROSPERO__)
   if (value == nullptr) {
     ::unsetenv(name);
   } else {
@@ -60,6 +60,8 @@ ScopedSetEnv::ScopedSetEnv(const char* var_name, const char* new_value)
   }
 
   SetEnvironmentVariableA(var_name_.c_str(), new_value);
+#elif defined(__PROSPERO__)
+  was_unset_ = true;
 #else
   const char* val = ::getenv(var_name_.c_str());
   if (val == nullptr) {

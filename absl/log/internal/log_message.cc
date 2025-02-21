@@ -396,7 +396,11 @@ void LogMessage::FailQuietly() {
   // of the program quickly, and it doesn't make much sense for FailQuietly to
   // offer different guarantees about exit behavior than Fail does. (And as a
   // consequence for QCHECK and CHECK to offer different exit behaviors)
+#if defined(__PROSPERO__)
+  exit(1);
+#else
   _exit(1);
+#endif
 }
 
 LogMessage& LogMessage::operator<<(const std::string& v) {

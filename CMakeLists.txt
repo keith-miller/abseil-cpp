@@ -98,7 +98,13 @@ endif()
 
 # find dependencies
 ## pthread
-find_package(Threads REQUIRED)
+if(__COMPILER_PS5)
+  set(Threads_FOUND ON)
+  set(CMAKE_USE_PTHREADS_INIT 1)
+  add_library(Threads::Threads INTERFACE IMPORTED)
+else()
+  find_package(Threads REQUIRED)
+endif()
 
 include(CMakeDependentOption)
 

@@ -19,7 +19,11 @@
 #ifndef __wasi__
 // WASI does not provide this header, either way we disable use
 // of signals with it below.
+#if defined(__PROSPERO__)
+#include <sys/signal.h>
+#else
 #include <signal.h>
+#endif
 #endif
 #endif
 
@@ -85,7 +89,7 @@ void SetCurrentThreadIdentity(ThreadIdentity* identity,
                   reclaimer);
 
 #if defined(__wasi__) || defined(__EMSCRIPTEN__) || defined(__MINGW32__) || \
-    defined(__hexagon__)
+    defined(__hexagon__) || defined(__PROSPERO__)
   // Emscripten, WASI and MinGW pthread implementations does not support
   // signals. See
   // https://kripken.github.io/emscripten-site/docs/porting/pthreads.html for

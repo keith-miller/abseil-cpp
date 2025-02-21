@@ -51,7 +51,12 @@ ABSL_ATTRIBUTE_UNUSED const bool unused = RegisterSyncLoggingFlags();
 
 template <typename T>
 T GetFromEnv(const char* varname, T dflt) {
+#if defined(__PROSPERO__)
+  (void)varname;
+  const char* val = nullptr;
+#else
   const char* val = ::getenv(varname);
+#endif  
   if (val != nullptr) {
     std::string err;
     ABSL_INTERNAL_CHECK(absl::ParseFlag(val, &dflt, &err), err.c_str());

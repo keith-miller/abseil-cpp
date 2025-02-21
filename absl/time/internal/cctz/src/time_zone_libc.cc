@@ -23,6 +23,10 @@
 #include <limits>
 #include <utility>
 
+#if defined(__PROSPERO__)
+#include <rtc.h>
+#endif
+
 #include "absl/base/config.h"
 #include "absl/time/internal/cctz/include/cctz/civil_time.h"
 #include "absl/time/internal/cctz/include/cctz/time_zone.h"
@@ -81,6 +85,23 @@ auto tm_zone(const std::tm& tm) -> decltype(tzname[0]) {
   const bool is_dst = tm.tm_isdst > 0;
   return tzname[is_dst];
 }
+#elif defined(__PROSPERO__)
+int tm_gmtoff(const std::tm& /*tm*/) {
+  SceRtcTick utcTick;
+  sceRtcGetCurrentTickUtc(&utcTick);
+  SceRtcTick localTick;
+  sceRtcConvertUtcToLocalTime(&utcTick, &localTick);
+  int32_t timeZoneOffset =
+      (int32_t)(((int64_t)(utcTick.tick) - (int64_t)(localTick.tick)) /
+                1000000ll);
+  return timeZoneOffset;
+}
+
+const char* tm_zone(const std::tm& /*tm*/) {
+  // TODO: how to get playstation current local zone name?
+  static char local_zone_name[] = "LOCAL";
+  return local_zone_name;
+}
 #else
 // Adapt to different spellings of the struct std::tm extension fields.
 #if defined(tm_gmtoff)
@@ -123,6 +144,8 @@ using tm_gmtoff_t = decltype(tm_gmtoff(std::tm{}));
 inline std::tm* gm_time(const std::time_t* timep, std::tm* result) {
 #if defined(_WIN32) || defined(_WIN64)
   return gmtime_s(result, timep) ? nullptr : result;
+#elif defined(__PROSPERO__)
+  return gmtime_s(timep, result) ? nullptr : result;
 #else
   return gmtime_r(timep, result);
 #endif
@@ -131,6 +154,8 @@ inline std::tm* gm_time(const std::time_t* timep, std::tm* result) {
 inline std::tm* local_time(const std::time_t* timep, std::tm* result) {
 #if defined(_WIN32) || defined(_WIN64)
   return localtime_s(result, timep) ? nullptr : result;
+#elif defined(__PROSPERO__)
+  return localtime_s(timep, result) ? nullptr : result;
 #else
   return localtime_r(timep, result);
 #endif

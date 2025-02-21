@@ -131,6 +131,7 @@ absl_cc_library(
     absl::raw_logging_internal
 )
 
+if(NOT(__COMPILER_PS5))
 absl_cc_library(
   NAME
     failure_signal_handler
@@ -167,6 +168,7 @@ absl_cc_test(
     Threads::Threads
     GTest::gmock
 )
+endif()
 
 # Internal-only target, do not depend on directly.
 absl_cc_library(

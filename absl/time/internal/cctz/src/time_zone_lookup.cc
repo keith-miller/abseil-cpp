@@ -292,7 +292,7 @@ time_zone local_time_zone() {
   char* tz_env = nullptr;
 #if defined(_MSC_VER)
   _dupenv_s(&tz_env, nullptr, "TZ");
-#else
+#elif !defined(__PROSPERO__)
   tz_env = std::getenv("TZ");
 #endif
   if (tz_env) zone = tz_env;
@@ -307,7 +307,7 @@ time_zone local_time_zone() {
 #if defined(_MSC_VER)
     // System-specific default is just "localtime".
     _dupenv_s(&localtime_env, nullptr, "LOCALTIME");
-#else
+#elif !defined(__PROSPERO__)
     zone = "/etc/localtime";  // System-specific default.
     localtime_env = std::getenv("LOCALTIME");
 #endif

@@ -438,7 +438,7 @@ std::unique_ptr<ZoneInfoSource> FileZoneInfoSource::Open(
     char* tzdir_env = nullptr;
 #if defined(_MSC_VER)
     _dupenv_s(&tzdir_env, nullptr, "TZDIR");
-#else
+#elif !defined(__PROSPERO__)
     tzdir_env = std::getenv("TZDIR");
 #endif
     if (tzdir_env && *tzdir_env) tzdir = tzdir_env;
@@ -682,7 +682,7 @@ bool TimeZoneInfo::Load(ZoneInfoSource* zip) {
   }
   bool seen_type_0 = false;
   for (std::size_t i = 0; i != hdr.timecnt; ++i) {
-    transitions_[i].type_index = Decode8(bp++);
+    transitions_[i].type_index = (uint_least8_t)Decode8(bp++);
     if (transitions_[i].type_index >= hdr.typecnt) return false;
     if (transitions_[i].type_index == 0) seen_type_0 = true;
   }
@@ -698,7 +698,7 @@ bool TimeZoneInfo::Load(ZoneInfoSource* zip) {
       return false;
     bp += 4;
     transition_types_[i].is_dst = (Decode8(bp++) != 0);
-    transition_types_[i].abbr_index = Decode8(bp++);
+    transition_types_[i].abbr_index = (uint_least8_t)Decode8(bp++);
     if (transition_types_[i].abbr_index >= hdr.charcnt) return false;
   }
 
@@ -759,7 +759,7 @@ bool TimeZoneInfo::Load(ZoneInfoSource* zip) {
   if (transitions_.empty() || transitions_.front().unix_time >= 0) {
     Transition& tr(*transitions_.emplace(transitions_.begin()));
     tr.unix_time = -(1LL << 59);  // -18267312070-10-26T17:01:52+00:00
-    tr.type_index = default_transition_type_;
+    tr.type_index = (uint_least8_t)default_transition_type_;
   }
 
   // Extend the transitions using the future specification.
@@ -774,7 +774,7 @@ bool TimeZoneInfo::Load(ZoneInfoSource* zip) {
     const std::uint_fast8_t type_index = last.type_index;
     Transition& tr(*transitions_.emplace(transitions_.end()));
     tr.unix_time = 2147483647;  // 2038-01-19T03:14:07+00:00
-    tr.type_index = type_index;
+    tr.type_index = (uint_least8_t)type_index;
   }
 
   // Compute the local civil time for each transition and the preceding

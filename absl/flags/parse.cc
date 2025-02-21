@@ -250,6 +250,10 @@ bool GetEnvVar(const char* var_name, std::string& var_value) {
   }
 
   var_value = std::string(buf, get_res);
+#elif defined(__PROSPERO__)
+  (void)var_name;
+  (void)var_value;
+  return false;
 #else
   const char* val = ::getenv(var_name);
   if (val == nullptr) {

@@ -33,7 +33,9 @@
 #include <sys/ucontext.h>
 #endif
 
+#if !defined(__PROSPERO__)
 #include <csignal>
+#endif
 #include <cstdio>
 
 #include "absl/base/attributes.h"
@@ -56,7 +58,7 @@ ABSL_CONST_INIT SymbolizeUrlEmitter debug_stack_trace_hook = nullptr;
 
 // Async-signal safe mmap allocator.
 void* Allocate(size_t num_bytes) {
-#ifdef ABSL_HAVE_MMAP
+#if defined(ABSL_HAVE_MMAP) && !defined(__PROSPERO__)
   void* p = ::mmap(nullptr, num_bytes, PROT_READ | PROT_WRITE,
                    MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
   return p == MAP_FAILED ? nullptr : p;
@@ -67,7 +69,7 @@ void* Allocate(size_t num_bytes) {
 }
 
 void Deallocate(void* p, size_t size) {
-#ifdef ABSL_HAVE_MMAP
+#if defined(ABSL_HAVE_MMAP) && !defined(__PROSPERO__)
   ::munmap(p, size);
 #else
   (void)p;

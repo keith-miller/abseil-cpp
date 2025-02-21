@@ -221,7 +221,7 @@ class btree_container {
   // Utility routines.
   ABSL_ATTRIBUTE_REINITIALIZES void clear() { tree_.clear(); }
   void swap(btree_container &other) { tree_.swap(other.tree_); }
-  void verify() const { tree_.verify(); }
+  void verify_struct() const { tree_.verify_struct(); }
 
   // Size routines.
   size_type size() const { return tree_.size(); }

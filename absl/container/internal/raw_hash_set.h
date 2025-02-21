@@ -2824,7 +2824,7 @@ class raw_hash_set {
   }
 
   raw_hash_set& operator=(raw_hash_set&& that) noexcept(
-      absl::allocator_traits<allocator_type>::is_always_equal::value &&
+    std::is_empty<allocator_type>::type::value &&
       std::is_nothrow_move_assignable<hasher>::value &&
       std::is_nothrow_move_assignable<key_equal>::value) {
     // TODO(sbenza): We should only use the operations from the noexcept clause
